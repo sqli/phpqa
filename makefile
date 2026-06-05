@@ -10,3 +10,7 @@ help: ## Outputs this help screen
 build: ## Build image with PHP version specified in php=<version> argument, e.g. `make build php=8.4`
 	@$(eval php ?=)
 	docker build --build-arg PHP_VERSION=$(php) -t sqli/phpqa:php$(php) - < ./Dockerfile
+
+sh: ## Run container with PHP version specified in php=<version> argument, e.g. `make sh php=8.4`
+	@$(eval php ?=)
+	docker run --init -it --rm --network host -v .:/project -v /tmp/phpqa:/tmp -w /project sqli/phpqa:php$(php) bash
