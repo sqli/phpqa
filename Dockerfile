@@ -1,11 +1,9 @@
-ARG PHP_VERSION=8.1
+ARG PHP_VERSION=8.4
 FROM jakzal/phpqa:php${PHP_VERSION}
-RUN echo "deb http://ftp.de.debian.org/debian buster main" > /etc/apt/sources.list.d/backports.list
-RUN echo "deb-src http://ftp.de.debian.org/debian buster main" >> /etc/apt/sources.list.d/backports.list
-RUN apt update
-RUN apt upgrade -y
 
-RUN apt install -y \
+RUN apt-get update
+
+RUN apt-get install -y --no-install-recommends \
 	acl \
 	file \
 	gettext \
@@ -17,7 +15,9 @@ RUN apt install -y \
 	libxslt-dev \
 	libpng-dev libwebp-dev libjpeg-dev libfreetype6-dev libxml-xpath-perl \
 	redis libgd3 rsync \
-	wget unzip jq chromium-common=90.0.4430.212-1~deb10u1 chromium=90.0.4430.212-1~deb10u1;
+  wget unzip jq chromium-common chromium && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 RUN docker-php-ext-install \
     pdo \
@@ -30,10 +30,9 @@ RUN docker-php-ext-install \
     gd \
     soap;
 
-# Remove nodejs/npm if present (ignore errors if not installed)
 RUN apt remove --purge nodejs npm || true
 RUN apt clean
-RUN rm -rf /usr/local/{lib/node{,/.npm,_modules},bin,share/man}/npm* || true
+RUN rm -rf /usr/local/{lib/node{,/.npm,_modules},bin,share/man}/npm*
 
 RUN mkdir -p /usr/src/php/ext/redis; \
 	curl -fsSL https://pecl.php.net/get/redis --ipv4 | tar xvz -C "/usr/src/php/ext/redis" --strip 1; \
@@ -44,7 +43,7 @@ RUN wget -q https://github.com/mozilla/geckodriver/releases/download/v0.32.0/gec
     tar -zxf geckodriver-v0.32.0-linux64.tar.gz -C /usr/bin; \
     tar -zxf geckodriver-v0.32.0-linux64.tar.gz -C /drivers; \
     rm geckodriver-v0.32.0-linux64.tar.gz
-    
+
 RUN wget -q https://chromedriver.storage.googleapis.com/90.0.4430.24/chromedriver_linux64.zip; \
     unzip chromedriver_linux64.zip -d /usr/bin; \
     unzip chromedriver_linux64.zip -d /drivers; \
@@ -54,7 +53,7 @@ RUN wget -q https://raw.githubusercontent.com/platformsh/cli/main/installer.sh; 
     bash installer.sh INSTALL_DIR=/usr/bin;\
     rm installer.sh
 
-RUN yes | pecl install xdebug-3.3.2 \
+RUN yes | pecl install xdebug-3.5.1 \
     && echo "zend_extension=$(find /usr/local/lib/php/extensions/ -name xdebug.so)" > /usr/local/etc/php/conf.d/xdebug.ini \
     && echo "xdebug.mode=coverage" >> /usr/local/etc/php/conf.d/xdebug.ini
 
@@ -63,3 +62,12 @@ RUN docker-php-ext-enable redis.so
 RUN docker-php-ext-install gd
 
 RUN composer global bin phpstan require ekino/phpstan-banned-code
+
+# Create non-root user
+RUN groupadd -g 1001 phpqauser && useradd -r -u 1001 -g phpqauser phpqauser
+
+# Change ownership of necessary directory
+RUN mkdir -p /project && chown -R phpqauser:phpqauser /project
+
+# Run everything as non-root
+USER phpqauser
