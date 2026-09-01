@@ -50,7 +50,7 @@ RUN wget -q https://raw.githubusercontent.com/platformsh/cli/main/installer.sh; 
     bash installer.sh INSTALL_DIR=/usr/bin;\
     rm installer.sh
 
-RUN yes | pecl install xdebug-3.3.2 \
+RUN yes | pecl install xdebug-3.4.1 \
     && echo "zend_extension=$(find /usr/local/lib/php/extensions/ -name xdebug.so)" > /usr/local/etc/php/conf.d/xdebug.ini \
     && echo "xdebug.mode=coverage" >> /usr/local/etc/php/conf.d/xdebug.ini
 
