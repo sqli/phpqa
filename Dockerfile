@@ -1,7 +1,6 @@
-ARG PHP_VERSION=8.1
+ARG PHP_VERSION=8.3
 FROM jakzal/phpqa:php${PHP_VERSION}
-RUN echo "deb http://ftp.de.debian.org/debian buster main" > /etc/apt/sources.list.d/backports.list
-RUN echo "deb-src http://ftp.de.debian.org/debian buster main" >> /etc/apt/sources.list.d/backports.list
+
 RUN apt update
 RUN apt upgrade -y
 
@@ -17,7 +16,7 @@ RUN apt install -y \
 	libxslt-dev \
 	libpng-dev libwebp-dev libjpeg-dev libfreetype6-dev libxml-xpath-perl \
 	redis libgd3 rsync \
-	wget unzip jq chromium-common=90.0.4430.212-1~deb10u1 chromium=90.0.4430.212-1~deb10u1;
+	wget unzip jq chromium chromium-driver;
 
 RUN docker-php-ext-install \
     pdo \
@@ -45,10 +44,7 @@ RUN wget -q https://github.com/mozilla/geckodriver/releases/download/v0.32.0/gec
     tar -zxf geckodriver-v0.32.0-linux64.tar.gz -C /drivers; \
     rm geckodriver-v0.32.0-linux64.tar.gz
     
-RUN wget -q https://chromedriver.storage.googleapis.com/90.0.4430.24/chromedriver_linux64.zip; \
-    unzip chromedriver_linux64.zip -d /usr/bin; \
-    unzip chromedriver_linux64.zip -d /drivers; \
-    rm chromedriver_linux64.zip
+RUN ln -sf /usr/bin/chromedriver /drivers/chromedriver
 
 RUN wget -q https://raw.githubusercontent.com/platformsh/cli/main/installer.sh; \
     bash installer.sh INSTALL_DIR=/usr/bin;\
