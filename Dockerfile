@@ -59,3 +59,6 @@ RUN docker-php-ext-enable redis.so
 RUN docker-php-ext-install gd
 
 RUN composer global bin phpstan require ekino/phpstan-banned-code
+# Security checker is now abandoned by fabpot, but we need it for backward compatibility with some projects. We will install it anyway.
+RUN wget -q https://github.com/fabpot/local-php-security-checker/releases/download/v2.1.3/local-php-security-checker_linux_amd64 -O /tools/local-php-security-checker
+RUN chmod +x /tools/local-php-security-checker
